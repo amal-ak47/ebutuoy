@@ -13,7 +13,7 @@ class MainWindow(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("Major")
+        self.setWindowTitle("Ebutouy")
         self.resize(600, 600)
         self.center()
 

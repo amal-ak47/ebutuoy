@@ -5,4 +5,5 @@ description = "An application to download youtube videos and playlists as mp3 or
 requires-python = ">=3.9"
 dependencies = [
     "pyqt5>=5.15.11",
+    "pytubefix>=10.3.8",
 ]
