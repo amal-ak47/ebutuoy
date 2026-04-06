@@ -1,0 +1,8 @@
+[project]
+name = "ebutouy"
+version = "1.0.0"
+description = "An application to download youtube videos and playlists as mp3 or mp4 and in desired resolution"
+requires-python = ">=3.9"
+dependencies = [
+    "pyqt5>=5.15.11",
+]
