@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from pydub import AudioSegment
 from pytubefix import YouTube
 from pytubefix import Playlist
 import os
@@ -27,13 +27,14 @@ class EbutouyDownloader():
 
 
     def video_download(self, resolution):
-        stream = self.yt.streams.filter(progressive=True, res=resolution, file_extension='mp4').first()
+        if self.yt:
+            self.streams = self.yt.streams.filter(progressive=True, res=resolution, file_extension='mp4').first()
 
-        if stream is None:
-            return False
-        stream.download(output_path=self.path)
-        return True
-
+            if self.streams  is None:
+                return False
+            self.streams .download(output_path=self.path)
+            return True
+        return None
 
     def get_resolutions_video(self):
         if self.yt:
@@ -49,20 +50,26 @@ class EbutouyDownloader():
             return sorted(set(res), reverse=True)
         return None
 
-    def audio_download(self):
-        ...
+    def single_audio_download(self, res):
+        if self.yt:
+            self.streams  = self.yt.streams.filter(only_audio=True, abr=res).first()
+            if self.streams is None:
+                return False
+            self.streams.download(output_path=self.path)
+            return True
+        return None
 
     def playlist_download(self):
         ...
 
 
 def main():
-    downloader = EbutouyDownloader("https://www.youtube.com/watch?v=MPTBT4-r4Fs")
+    downloader = EbutouyDownloader("https://www.youtube.com/watch?v=VP6eZu3SAak")
     print(downloader.get_resolutions_audio())
     print(downloader.get_resolutions_video())
 
     res = input("Enter resolution: ")
-    downloader.video_download(res)
+    downloader.single_audio_download(res)
 
 
 if __name__ == "__main__":
