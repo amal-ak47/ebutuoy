@@ -25,17 +25,9 @@ class EbutouyDownloader():
         else:
             self.yt = YouTube(self.link)
             self.plst = None
-            self.head = self.yt.title
+            self.head = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
             self.channel = self.yt.author
             self.thumbnail = self.yt.thumbnail_url
-
-
-
-    def sanitize_filename(self, filename):
-        """Remove invalid characters from filename."""
-        # Remove quotes, slashes, colons, etc.
-        invalid_chars = r'[<>:"/\\|?*]'
-        return re.sub(invalid_chars, '', filename)
 
     def video_download(self, resolution):
         if self.yt:
@@ -71,14 +63,20 @@ class EbutouyDownloader():
         return None
 
     def meta(self):
-        safe_title = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
-        m4a_path = f"{self.path}/{safe_title}.m4a"
-
+        m4a_path = f"{self.path}/{self.head}.m4a"
         audio = MP4(m4a_path)
         title = f"{self.yt.title}"
         audio["\xa9nam"] = [title]
         audio["\xa9ART"] = [self.channel]
         audio.save()
+
+    def mp3_convert(self):
+        m4a_path = f"{self.path}/{self.head}.m4a"
+        sound = AudioSegment.from_file(m4a_path, format="m4a")
+        mp3_path = m4a_path.replace(".m4a", ".mp3")
+        sound.export(mp3_path, format="mp3")
+        os.remove(m4a_path)
+
     def playlist_download(self):
         ...
 
