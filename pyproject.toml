@@ -4,6 +4,7 @@ version = "1.0.0"
 description = "An application to download youtube videos and playlists as mp3 or mp4 and in desired resolution"
 requires-python = ">=3.9"
 dependencies = [
+    "mutagen>=1.47.0",
     "pydub>=0.25.1",
     "pyqt5>=5.15.11",
     "pytubefix>=10.3.8",
