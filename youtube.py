@@ -5,7 +5,8 @@ from pydub import AudioSegment
 from pytubefix import YouTube
 from pytubefix import Playlist
 import os
-from mutagen.mp4 import MP4
+from mutagen.mp4 import MP4, MP4Cover
+import urllib.request
 import re
 
 class EbutouyDownloader():
@@ -25,7 +26,7 @@ class EbutouyDownloader():
         else:
             self.yt = YouTube(self.link)
             self.plst = None
-            self.head = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
+            self.head = self.yt.title
             self.channel = self.yt.author
             self.thumbnail = self.yt.thumbnail_url
 
@@ -63,26 +64,26 @@ class EbutouyDownloader():
         return None
 
     def meta(self):
-        m4a_path = f"{self.path}/{self.head}.m4a"
-        audio = MP4(m4a_path)
-        title = f"{self.yt.title}"
-        audio["\xa9nam"] = [title]
+        try:
+            m4a_path = f"{self.path}/{self.yt.title}.m4a"
+            audio = MP4(m4a_path)
+
+        except Exception:
+            safe_title = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
+            m4a_path = f"{self.path}/{safe_title}.m4a"
+            audio = MP4(m4a_path)
+
+        thumb_data = urllib.request.urlopen(self.thumbnail).read()
+        audio["covr"] = [MP4Cover(thumb_data, imageformat=MP4Cover.FORMAT_JPEG)]
+        audio["\xa9nam"] = [self.yt.title]
         audio["\xa9ART"] = [self.channel]
         audio.save()
-
-    def mp3_convert(self):
-        m4a_path = f"{self.path}/{self.head}.m4a"
-        sound = AudioSegment.from_file(m4a_path, format="m4a")
-        mp3_path = m4a_path.replace(".m4a", ".mp3")
-        sound.export(mp3_path, format="mp3")
-        os.remove(m4a_path)
-
     def playlist_download(self):
         ...
 
 
 def main():
-    downloader = EbutouyDownloader("https://www.youtube.com/watch?v=VP6eZu3SAak")
+    downloader = EbutouyDownloader("https://www.youtube.com/watch?v=NE6FcGcnvcA")
     print(downloader.get_resolutions_audio())
     print(downloader.get_resolutions_video())
 
