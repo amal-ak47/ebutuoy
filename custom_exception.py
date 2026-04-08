@@ -1,28 +1,39 @@
+
 class EbutouyExceptions(Exception):
-    def __init__(self, message, error_code):
+    def __init__(self, message: str, error_code: int):
         super().__init__(message)
         self.message = message
         self.error_code = error_code
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Error: {self.message}\nError Code: {self.error_code}"
 
-class InputError(EbutouyExceptions):
-    def __init__(self):
-        super().__init__("Invalid URL", 100)
 
-class DownloadError(EbutouyExceptions):
-    def __init__(self):
-        super().__init__("Can't Download Video", 110)
+class InvalidURLError(EbutouyExceptions):
+    def __init__(self, details: str = ""):
+        message = f"Invalid URL{f': {details}' if details else ''}"
+        super().__init__(message, 100)
 
-class NilStreams(EbutouyExceptions):
-    def __init__(self):
-        super().__init__("No Streams For The Video", 120)
 
-class UpdateError(EbutouyExceptions):
-    def __init__(self):
-        super().__init__("Update your app", 190)
+class DownloadFailedError(EbutouyExceptions):
+    def __init__(self, details: str = ""):
+        message = f"Can't Download Video{f': {details}' if details else ''}"
+        super().__init__(message, 110)
 
-class NukedError(EbutouyExceptions):
-    def __init__(self):
-        super().__init__("The app isnt working properly check for updates", 200)
+
+class NoStreamsError(EbutouyExceptions):
+    def __init__(self, details: str = ""):
+        message = f"No Streams For The Video{f': {details}' if details else ''}"
+        super().__init__(message, 120)
+
+
+class MetadataError(EbutouyExceptions):
+    def __init__(self, details: str = ""):
+        message = f"Metadata Operation Failed{f': {details}' if details else ''}"
+        super().__init__(message, 130)
+
+
+class FileOperationError(EbutouyExceptions):
+    def __init__(self, details: str = ""):
+        message = f"File Operation Failed{f': {details}' if details else ''}"
+        super().__init__(message, 140)
