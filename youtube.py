@@ -1,3 +1,5 @@
+import os
+import subprocess
 from pathlib import Path
 from typing import Optional, List
 from pytubefix import YouTube
@@ -86,12 +88,11 @@ class SingleDownloader:
             raise DownloadFailedError(str(e))
 
     # changing meta tags of the audio file
-    def meta(self) -> None:
+    def audio_meta(self) -> None:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
             m4a_path = f"{self.path}/{self.yt.title}.m4a"
-
             try:
                 audio = MP4(m4a_path)
             except FileNotFoundError:
@@ -117,6 +118,45 @@ class SingleDownloader:
         except Exception as e:
             raise MetadataError(str(e))
 
+    # changing meta tags of the video file
+    def video_meta(self) -> None:
+        if not self.yt:
+            raise InvalidURLError("YouTube object not initialized")
+        try:
+            mp4_path = f"{self.path}/{self.yt.title}.mp4"
+            try:
+                MP4(mp4_path)
+            except FileNotFoundError:
+                safe_title = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
+                mp4_path = f"{self.path}/{safe_title}.mp4"
+                MP4(mp4_path)
+            try:
+                if self.thumbnail and self.yt.title and self.channel:
+                    thumb_path = f"{self.path}/temp_thumb.jpg"
+                    temp_output = f"{self.path}/.temp_video.mp4"
+                    urllib.request.urlretrieve(self.thumbnail, thumb_path)
+                    command = [
+                        "ffmpeg",
+                        "-y",
+                        "-i", mp4_path,
+                        "-i", thumb_path,
+                        "-metadata", f"artist={self.channel}",
+                        "-map", "0",
+                        "-map", "1",
+                        "-c", "copy",
+                        "-disposition:v:1", "attached_pic",
+                        temp_output
+                    ]
+                    subprocess.run(command)
+                    os.remove(thumb_path)
+                    os.replace(temp_output, mp4_path)
+            except Exception:
+                pass
+        except FileNotFoundError:
+            raise MetadataError("Audio file not found")
+        except Exception as e:
+            raise MetadataError(str(e))
+
 # main function just for testing
 def main():
     try:
@@ -130,16 +170,27 @@ def main():
         if video_options:
             print("Available video resolutions:", video_options)
 
-        bitrate_input = input("Enter abr (or leave empty to skip): ").strip()
+        # bitrate_input = input("Enter abr (or leave empty to skip): ").strip()
+        #
+        # if bitrate_input:
+        #     if downloader.single_audio_download(bitrate_input):
+        #         downloader.audio_meta()
+        #         print("Audio downloaded successfully")
+        #     else:
+        #         print("Failed to download audio")
+        # else:
+        #     print("Audio download skipped")
 
-        if bitrate_input:
-            if downloader.single_audio_download(bitrate_input):
-                downloader.meta()
-                print("Audio downloaded successfully")
+        resolution_input = input("Enter resolution (or leave empty to skip): ").strip()
+
+        if resolution_input:
+            if downloader.video_download(resolution_input):
+                downloader.video_meta()
+                print("Video downloaded successfully")
             else:
-                print("Failed to download audio")
+                print("Failed to download Video")
         else:
-            print("Audio download skipped")
+            print("Video download skipped")
 
     except (InvalidURLError, DownloadFailedError, NoStreamsError, MetadataError, FileOperationError) as e:
         print(e)
