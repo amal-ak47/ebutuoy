@@ -1,8 +1,11 @@
+import collections
 import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, List
+
+import pytubefix
 from pytubefix import YouTube
 from mutagen.mp4 import MP4, MP4Cover
 import urllib.request
@@ -12,8 +15,8 @@ from custom_exception import FileOperationError, InvalidURLError, NoStreamsError
 # Class for downloading single video as mp3 or mp4 in available
 class SingleDownloader:
     def __init__(self, link: str, path: str = str(Path.home() / "Downloads")):
-        self.link = str(link).strip()
-        self.path = path
+        self.link: str = str(link).strip()
+        self.path: str = path
         self.yt: Optional[YouTube] = None
         self.channel: Optional[str] = None
         self.thumbnail: Optional[str] = None
@@ -42,7 +45,7 @@ class SingleDownloader:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
-            stream = self.yt.streams.filter(progressive=True, res=resolution, file_extension='mp4').first()
+            stream: pytubefix.Stream = self.yt.streams.filter(progressive=True, res=resolution, file_extension='mp4').first()
             if not stream:
                 raise NoStreamsError(f"No stream available for {resolution}")
             stream.download(output_path=self.path)
@@ -57,8 +60,8 @@ class SingleDownloader:
         if not self.yt:
             return None
         try:
-            streams = self.yt.streams.filter(progressive=True, file_extension='mp4')
-            resolutions = [x.resolution for x in streams if x.resolution]
+            streams: collections.Iterable = self.yt.streams.filter(progressive=True, file_extension='mp4')
+            resolutions: list = [x.resolution for x in streams if x.resolution]
             return sorted(set(resolutions), reverse=True) or None
         except Exception:
             return None
@@ -68,8 +71,8 @@ class SingleDownloader:
         if not self.yt:
             return None
         try:
-            streams = self.yt.streams.filter(only_audio=True)
-            audio_bitrates = [s.abr for s in streams if s.abr and s.abr not in ('160kbps', '50kbps')]
+            streams: collections.Iterable = self.yt.streams.filter(only_audio=True)
+            audio_bitrates: list = [s.abr for s in streams if s.abr and s.abr not in ('160kbps', '50kbps')]
             return sorted(set(audio_bitrates), reverse=True) or None
         except Exception:
             return None
@@ -81,7 +84,7 @@ class SingleDownloader:
         if not bitrate:
             return False
         try:
-            stream = self.yt.streams.filter(only_audio=True, abr=bitrate).first()
+            stream: pytubefix.Stream = self.yt.streams.filter(only_audio=True, abr=bitrate).first()
             if not stream:
                 return False
             stream.download(output_path=self.path)
@@ -94,21 +97,21 @@ class SingleDownloader:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
-            m4a_path = f"{self.path}/{self.yt.title}.m4a"
+            m4a_path: str = f"{self.path}/{self.yt.title}.m4a"
             try:
                 MP4(m4a_path)
             except FileNotFoundError:
-                safe_title = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
+                safe_title: str = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
                 m4a_path = f"{self.path}/{safe_title}.m4a"
                 MP4(m4a_path)
 
             try:
                 if self.thumbnail and self.channel:
-                    thumb_path = f"{self.path}/temp_thumb.jpg"
-                    temp_output = f"{self.path}/.temp_audio.mp3"
-                    mp3_path = m4a_path.replace(".m4a", ".mp3")
+                    thumb_path: str = f"{self.path}/temp_thumb.jpg"
+                    temp_output: str = f"{self.path}/.temp_audio.mp3"
+                    mp3_path: str = m4a_path.replace(".m4a", ".mp3")
                     urllib.request.urlretrieve(self.thumbnail, thumb_path)
-                    command = [
+                    command: list = [
                         "ffmpeg",
                         "-y",
                         "-i", m4a_path,
@@ -142,19 +145,19 @@ class SingleDownloader:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
-            mp4_path = f"{self.path}/{self.yt.title}.mp4"
+            mp4_path: str = f"{self.path}/{self.yt.title}.mp4"
             try:
                 MP4(mp4_path)
             except FileNotFoundError:
-                safe_title = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
+                safe_title: str = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
                 mp4_path = f"{self.path}/{safe_title}.mp4"
                 MP4(mp4_path)
             try:
                 if self.thumbnail and self.yt.title and self.channel:
-                    thumb_path = f"{self.path}/temp_thumb.jpg"
-                    temp_output = f"{self.path}/.temp_video.mp4"
+                    thumb_path: str = f"{self.path}/temp_thumb.jpg"
+                    temp_output: str = f"{self.path}/.temp_video.mp4"
                     urllib.request.urlretrieve(self.thumbnail, thumb_path)
-                    command = [
+                    command: list = [
                         "ffmpeg",
                         "-y",
                         "-i", mp4_path,
@@ -179,20 +182,20 @@ class SingleDownloader:
 # main function just for testing
 def main():
     try:
-        downloader = SingleDownloader("https://www.youtube.com/watch?v=NE6FcGcnvcA")
+        downloader: SingleDownloader = SingleDownloader("https://www.youtube.com/watch?v=NE6FcGcnvcA")
 
-        usr_choice = ""
+        usr_choice: int = 0
         try:
             usr_choice = int(input("Download audio (1)\nDownload Video(2)\nExit (3)\nChoice: "))
         except ValueError:
             print("Choose the correct option (1 or 2)")
 
         if usr_choice == 1:
-            audio_options = downloader.get_resolutions_audio()
+            audio_options: list = downloader.get_resolutions_audio()
 
             if audio_options:
                 print("Available abr:", audio_options)
-            bitrate_input = input("Enter abr (or leave empty to skip): ").strip()
+            bitrate_input: str = input("Enter abr (or leave empty to skip): ").strip()
 
             if bitrate_input:
                 if downloader.single_audio_download(bitrate_input):
@@ -204,10 +207,10 @@ def main():
                 print("Audio download skipped")
 
         elif usr_choice == 2:
-            video_options = downloader.get_resolutions_video()
+            video_options: list = downloader.get_resolutions_video()
             if video_options:
                 print("Available video resolutions:", video_options)
-            resolution_input = input("Enter resolution (or leave empty to skip): ").strip()
+            resolution_input: str = input("Enter resolution (or leave empty to skip): ").strip()
 
             if resolution_input:
                 if downloader.video_download(resolution_input):
