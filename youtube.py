@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional, List
 from pytubefix import YouTube
@@ -24,6 +25,7 @@ class SingleDownloader:
 
         self._initialize_youtube()
 
+    # Initialize YouTube object
     def _initialize_youtube(self) -> None:
         if not self.link:
             raise InvalidURLError("YouTube link cannot be empty")
@@ -94,25 +96,42 @@ class SingleDownloader:
         try:
             m4a_path = f"{self.path}/{self.yt.title}.m4a"
             try:
-                audio = MP4(m4a_path)
+                MP4(m4a_path)
             except FileNotFoundError:
                 safe_title = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
                 m4a_path = f"{self.path}/{safe_title}.m4a"
-                audio = MP4(m4a_path)
+                MP4(m4a_path)
 
             try:
-                if self.thumbnail:
-                    thumb_data = urllib.request.urlopen(self.thumbnail, timeout=10).read()
-                    audio["covr"] = [MP4Cover(thumb_data, imageformat=MP4Cover.FORMAT_JPEG)]
+                if self.thumbnail and self.channel:
+                    thumb_path = f"{self.path}/temp_thumb.jpg"
+                    temp_output = f"{self.path}/.temp_audio.mp3"
+                    mp3_path = m4a_path.replace(".m4a", ".mp3")
+                    urllib.request.urlretrieve(self.thumbnail, thumb_path)
+                    command = [
+                        "ffmpeg",
+                        "-y",
+                        "-i", m4a_path,
+                        "-i", thumb_path,
+                        "-map", "0:a",
+                        "-map", "1:v",
+                        "-c:a", "libmp3lame",
+                        "-q:a", "4",
+                        "-c:v", "copy",
+                        "-metadata", f"artist={self.channel}",
+                        "-metadata:s:v", "title=Album cover",
+                        "-metadata:s:v", "comment=Cover (front)",
+                        "-id3v2_version", "3",
+                        temp_output
+                    ]
+                    subprocess.run(command)
+                    os.remove(thumb_path)
+                    os.replace(temp_output, mp3_path)
+                    os.remove(m4a_path)
+
             except Exception:
                 pass
 
-            if self.yt.title:
-                audio["\xa9nam"] = [self.yt.title]
-            if self.channel:
-                audio["\xa9ART"] = [self.channel]
-
-            audio.save()
         except FileNotFoundError:
             raise MetadataError("Audio file not found")
         except Exception as e:
@@ -162,35 +181,44 @@ def main():
     try:
         downloader = SingleDownloader("https://www.youtube.com/watch?v=NE6FcGcnvcA")
 
-        audio_options = downloader.get_resolutions_audio()
-        video_options = downloader.get_resolutions_video()
+        usr_choice = ""
+        try:
+            usr_choice = int(input("Download audio (1)\nDownload Video(2)\nExit (3)\nChoice: "))
+        except ValueError:
+            print("Choose the correct option (1 or 2)")
 
-        if audio_options:
-            print("Available abr:", audio_options)
-        if video_options:
-            print("Available video resolutions:", video_options)
+        if usr_choice == 1:
+            audio_options = downloader.get_resolutions_audio()
 
-        # bitrate_input = input("Enter abr (or leave empty to skip): ").strip()
-        #
-        # if bitrate_input:
-        #     if downloader.single_audio_download(bitrate_input):
-        #         downloader.audio_meta()
-        #         print("Audio downloaded successfully")
-        #     else:
-        #         print("Failed to download audio")
-        # else:
-        #     print("Audio download skipped")
+            if audio_options:
+                print("Available abr:", audio_options)
+            bitrate_input = input("Enter abr (or leave empty to skip): ").strip()
 
-        resolution_input = input("Enter resolution (or leave empty to skip): ").strip()
-
-        if resolution_input:
-            if downloader.video_download(resolution_input):
-                downloader.video_meta()
-                print("Video downloaded successfully")
+            if bitrate_input:
+                if downloader.single_audio_download(bitrate_input):
+                    downloader.audio_meta()
+                    print("Audio downloaded successfully")
+                else:
+                    print("Failed to download audio")
             else:
-                print("Failed to download Video")
-        else:
-            print("Video download skipped")
+                print("Audio download skipped")
+
+        elif usr_choice == 2:
+            video_options = downloader.get_resolutions_video()
+            if video_options:
+                print("Available video resolutions:", video_options)
+            resolution_input = input("Enter resolution (or leave empty to skip): ").strip()
+
+            if resolution_input:
+                if downloader.video_download(resolution_input):
+                    downloader.video_meta()
+                    print("Video downloaded successfully")
+                else:
+                    print("Failed to download Video")
+            else:
+                print("Video download skipped")
+        elif usr_choice == 3:
+            sys.exit("Bye...")
 
     except (InvalidURLError, DownloadFailedError, NoStreamsError, MetadataError, FileOperationError) as e:
         print(e)
