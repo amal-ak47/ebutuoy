@@ -10,6 +10,8 @@ from mutagen.mp4 import MP4
 import urllib.request
 import re
 from custom_exception import FileOperationError, InvalidURLError, NoStreamsError, DownloadFailedError, MetadataError
+from unidecode import unidecode
+
 
 # Class for downloading single video as mp3 or mp4 in available
 class SingleDownloader:
@@ -40,7 +42,7 @@ class SingleDownloader:
             raise InvalidURLError(f"Failed to load video: {str(e)}")
 
     # video downloading using desired resolution as mp4 format
-    def video_download(self, resolution: str) -> bool:
+    def single_video_download(self, resolution: str) -> bool:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
@@ -96,13 +98,20 @@ class SingleDownloader:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
-            m4a_path: str = f"{self.path}/{self.yt.title}.m4a"
+            safe_title: str = unidecode(self.yt.title)
+            safe_title = re.sub(r'[/\\:<>"|?*]', '', safe_title)
+
+            m4a_files: list = list(Path(self.path).glob(f"*{safe_title.split()[:10]}*.m4a"))
+            if not m4a_files:
+                raise MetadataError("Audio file not found")
+
+            m4a_path = str(m4a_files[0])
             try:
                 MP4(m4a_path)
             except FileNotFoundError:
-                safe_title: str = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
-                m4a_path = f"{self.path}/{safe_title}.m4a"
-                MP4(m4a_path)
+                mp3_path: str = m4a_path.replace(".m4a", ".mp3")
+                MP4(mp3_path)
+                m4a_path = mp3_path
 
             try:
                 if self.thumbnail and self.channel:
@@ -145,12 +154,14 @@ class SingleDownloader:
             raise InvalidURLError("YouTube object not initialized")
         try:
             mp4_path: str = f"{self.path}/{self.yt.title}.mp4"
-            try:
-                MP4(mp4_path)
-            except FileNotFoundError:
-                safe_title: str = re.sub(r'[/\\:<>"|?*]', '', self.yt.title)
-                mp4_path = f"{self.path}/{safe_title}.mp4"
-                MP4(mp4_path)
+            safe_title: str = unidecode(self.yt.title)
+            safe_title = re.sub(r'[/\\:<>"|?*]', '', safe_title)
+
+            mp4_files: list = list(Path(self.path).glob(f"*{safe_title[:10]}*.mp4"))
+            if not mp4_files:
+                raise MetadataError("Video file not found")
+
+            mp4_path: str = str(mp4_files[0])
             try:
                 if self.thumbnail and self.yt.title and self.channel:
                     thumb_path: str = f"{self.path}/temp_thumb.jpg"
@@ -181,7 +192,7 @@ class SingleDownloader:
 # main function just for testing
 def main():
     try:
-        downloader: SingleDownloader = SingleDownloader("https://www.youtube.com/watch?v=NE6FcGcnvcA")
+        downloader: SingleDownloader = SingleDownloader("https://www.youtube.com/watch?v=p3f5aDI5kSY&list=PLQWraVTLRsSl9xzha46s9K-LEbIG8UlNo&index=12")
 
         usr_choice: int = 0
         try:
@@ -212,7 +223,7 @@ def main():
             resolution_input: str = input("Enter resolution (or leave empty to skip): ").strip()
 
             if resolution_input:
-                if downloader.video_download(resolution_input):
+                if downloader.single_video_download(resolution_input):
                     downloader.video_meta()
                     print("Video downloaded successfully")
                 else:
