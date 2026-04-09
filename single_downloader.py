@@ -4,10 +4,9 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, List
-
 import pytubefix
 from pytubefix import YouTube
-from mutagen.mp4 import MP4, MP4Cover
+from mutagen.mp4 import MP4
 import urllib.request
 import re
 from custom_exception import FileOperationError, InvalidURLError, NoStreamsError, DownloadFailedError, MetadataError
