@@ -23,6 +23,7 @@ class MainWindow(QWidget):
         self.main_layout = QVBoxLayout()
         self.text_box_layout = QHBoxLayout()
         self.text_box_layout.setSpacing(20)
+        self.main_layout.setSpacing(20)
         self.video_box_layout = QHBoxLayout()
         self.video_box_layout.setSpacing(10)
 
@@ -89,6 +90,7 @@ class MainWindow(QWidget):
                 format_btn_group.addButton(self.mp4_radio_btn)
                 self.mp4_radio_btn.setChecked(True)
                 download_btn = QPushButton("Download")
+                download_btn.clicked.connect(self.download_vid)
 
                 self.mp3_radio_btn.toggled.connect(self.on_format_changed)
                 self.mp4_radio_btn.toggled.connect(self.on_format_changed)
@@ -112,6 +114,13 @@ class MainWindow(QWidget):
             error_label.setAlignment(Qt.AlignCenter)
             self.video_box_layout.addWidget(error_label)
 
+    def download_vid(self):
+        if self.mp4_radio_btn.isChecked():
+            self.downloader.single_video_download(self.resolution_combo_box.currentText())
+            self.downloader.video_meta()
+        elif self.mp3_radio_btn.isChecked():
+            self.downloader.single_audio_download(self.resolution_combo_box.currentText())
+            self.downloader.audio_meta()
 
     def on_format_changed(self):
         if self.mp3_radio_btn.isChecked():
