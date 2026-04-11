@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QLa
 
 from utils.custom_exception import InvalidURLError, DownloadFailedError, MetadataError, NoStreamsError, \
     FileOperationError
+from utils.playlist import PlaylistDownloader
 from utils.single_downloader import SingleDownloader
 
 
@@ -65,7 +66,20 @@ class MainWindow(QWidget):
         self.url_text = self.url_box.text()
         self.url_box.clear()
         if "list=" in self.url_text:
-            ...
+            try:
+                self.downloader = PlaylistDownloader(self.url_text)
+                vid_thumbnail = QLabel(self)
+                url = str(self.downloader.thumbnail)
+                thumbnail_data = urlopen(url).read()
+                pixmap = QPixmap()
+                pixmap.loadFromData(thumbnail_data)
+                pixmap = pixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+            except (InvalidURLError, DownloadFailedError, NoStreamsError, MetadataError, FileOperationError) as e:
+                error_label = QLabel(str(e))
+                error_label.setAlignment(Qt.AlignCenter)
+                self.video_box_layout.addWidget(error_label)
+
         elif "v=" in self.url_text or "shorts/" in self.url_text:
             try:
                 self.downloader = SingleDownloader(self.url_text)
@@ -106,7 +120,7 @@ class MainWindow(QWidget):
                 self.format_btn_layout.addWidget(self.mp3_radio_btn)
                 self.video_box_layout.addWidget(download_btn)
             except (InvalidURLError, DownloadFailedError, NoStreamsError, MetadataError, FileOperationError) as e:
-                error_label = QLabel(e)
+                error_label = QLabel(str(e))
                 error_label.setAlignment(Qt.AlignCenter)
                 self.video_box_layout.addWidget(error_label)
         else:

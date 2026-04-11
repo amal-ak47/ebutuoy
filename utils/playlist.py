@@ -2,8 +2,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 from pytubefix import Playlist
-from single_downloader import SingleDownloader
-from custom_exception import FileOperationError, InvalidURLError, MetadataError
+from .single_downloader import SingleDownloader
+from .custom_exception import FileOperationError, InvalidURLError, MetadataError
 
 
 class PlaylistDownloader():
