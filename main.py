@@ -1,7 +1,7 @@
 import sys
 from urllib.request import urlopen
 from PyQt5.QtCore import Qt, QTimer, QRect
-from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtGui import QPixmap, QFont, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QComboBox, QLineEdit, \
     QRadioButton, QButtonGroup, QScrollArea, QFrame, QDialog
 from utils.custom_exception import InvalidURLError, DownloadFailedError, MetadataError, NoStreamsError, \
@@ -129,6 +129,7 @@ class MainWindow(QWidget):
 # UI initializing
     def initUI(self):
         self.setWindowTitle("Ebutouy")
+        self.setWindowIcon(QIcon('logo.png'))
         self.setFixedSize(600, 600)
         self.center()
 
@@ -434,12 +435,8 @@ class MainWindow(QWidget):
         self.move(x, y)
 
 
-def main():
-    app = QApplication([])
-    win = MainWindow()
-    win.show()
-    sys.exit(app.exec_())
 
-
-if __name__ == "__main__":
-    main()
+app = QApplication([])
+win = MainWindow()
+win.show()
+sys.exit(app.exec_())
