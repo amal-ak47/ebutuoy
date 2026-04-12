@@ -9,45 +9,14 @@ from utils.custom_exception import InvalidURLError, DownloadFailedError, Metadat
 from utils.playlist import PlaylistDownloader
 from utils.single_downloader import SingleDownloader
 
-
-class PopupDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(300, 150)
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        popup_widget = QFrame()
-        popup_widget.setStyleSheet("""
-            QFrame {
-                background-color: #1a1a1a;
-                border: 2px solid #ffffff;
-                border-radius: 15px;
-            }
-        """)
-
-        popup_layout = QVBoxLayout(popup_widget)
-        popup_layout.setContentsMargins(30, 30, 30, 30)
-
-        text = QLabel("✓ Download Complete")
-        text.setAlignment(Qt.AlignCenter)
-        text.setFont(QFont("Arial", 14, QFont.Bold))
-        text.setStyleSheet("color: #ffffff;")
-
-        popup_layout.addWidget(text)
-        layout.addWidget(popup_widget)
-        self.setLayout(layout)
-
-
+# Main window class
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
         self.apply_styles()
 
+# For the styles
     def apply_styles(self):
         self.setStyleSheet("""
             QWidget {
@@ -157,18 +126,20 @@ class MainWindow(QWidget):
             }
         """)
 
+# UI initializing
     def initUI(self):
         self.setWindowTitle("Ebutouy")
         self.setFixedSize(600, 600)
         self.center()
 
+    # Layouts
         self.main_layout = QVBoxLayout()
         self.main_layout.setContentsMargins(30, 30, 30, 30)
         self.main_layout.setSpacing(20)
-
         self.text_box_layout = QHBoxLayout()
         self.text_box_layout.setSpacing(15)
 
+    # Widgets
         heading = QLabel("Ebutouy")
         heading.setAlignment(Qt.AlignCenter)
         heading.setFont(QFont("Arial", 28, QFont.Bold))
@@ -200,6 +171,7 @@ class MainWindow(QWidget):
         self.main_layout.addStretch()
         self.setLayout(self.main_layout)
 
+# Method for clearing the screen
     def clear_layout(self, layout):
         while layout.count():
             item = layout.takeAt(0)
@@ -208,6 +180,7 @@ class MainWindow(QWidget):
             elif item.layout():
                 self.clear_layout(item.layout())
 
+# For getting the video and the details
     def search_function(self):
         while self.video_box_layout.count():
             item = self.video_box_layout.takeAt(0)
@@ -217,6 +190,8 @@ class MainWindow(QWidget):
                 self.clear_layout(item.layout())
         self.url_text = self.url_box.text()
         self.url_box.clear()
+
+        # For playlists
         if "list=" in self.url_text:
             try:
                 self.downloader = PlaylistDownloader(self.url_text)
@@ -287,6 +262,7 @@ class MainWindow(QWidget):
                 error_label.setStyleSheet("color: #ff6b6b; font-weight: bold;")
                 self.video_box_layout.addWidget(error_label)
 
+        # For videos and shorts
         elif "v=" in self.url_text or "shorts/" in self.url_text:
             try:
                 self.downloader = SingleDownloader(self.url_text)
@@ -350,12 +326,15 @@ class MainWindow(QWidget):
                 error_label.setAlignment(Qt.AlignCenter)
                 error_label.setStyleSheet("color: #ff6b6b; font-weight: bold;")
                 self.video_box_layout.addWidget(error_label)
+
+        # Error Handling
         else:
             error_label = QLabel("Not Valid URL")
             error_label.setAlignment(Qt.AlignCenter)
             error_label.setStyleSheet("color: #ff6b6b; font-weight: bold;")
             self.video_box_layout.addWidget(error_label)
 
+# For downloading playlist as mp3 or mp4
     def download_playlist(self):
         if self.mp4_radio_btn.isChecked():
             try:
@@ -378,6 +357,7 @@ class MainWindow(QWidget):
                 error_label.setStyleSheet("color: #ff6b6b; font-weight: bold;")
                 self.video_box_layout.addWidget(error_label)
 
+# For downloading videos as mp3 or mp4
     def download_vid(self):
         if self.mp4_radio_btn.isChecked():
             try:
@@ -400,6 +380,7 @@ class MainWindow(QWidget):
                 error_label.setStyleSheet("color: #ff6b6b; font-weight: bold;")
                 self.video_box_layout.addWidget(error_label)
 
+# Download complete confirmation
     def show_popup(self):
         self.popup_label = QLabel("✓ Download Complete")
         self.popup_label.setAlignment(Qt.AlignCenter)
@@ -414,10 +395,13 @@ class MainWindow(QWidget):
         self.video_box_layout.addWidget(self.popup_label)
         QTimer.singleShot(3000, self.remove_popup)
 
+# For removing the confirmation after 3 seconds
     def remove_popup(self):
         if hasattr(self, 'popup_label'):
             self.video_box_layout.removeWidget(self.popup_label)
             self.popup_label.deleteLater()
+
+# Checking if user changed the format
     def on_format_changed(self):
         if self.mp3_radio_btn.isChecked():
             try:
@@ -441,6 +425,7 @@ class MainWindow(QWidget):
                 error_label.setStyleSheet("color: #ff6b6b; font-weight: bold;")
                 self.video_box_layout.addWidget(error_label)
 
+# For centering the window
     def center(self) -> None:
         screen = QApplication.primaryScreen().availableGeometry()
         size = self.frameGeometry()
