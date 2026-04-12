@@ -1,10 +1,9 @@
 import sys
 from urllib.request import urlopen
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QComboBox, QLineEdit, \
     QRadioButton, QButtonGroup, QScrollArea
-
 from utils.custom_exception import InvalidURLError, DownloadFailedError, MetadataError, NoStreamsError, \
     FileOperationError
 from utils.playlist import PlaylistDownloader
@@ -110,12 +109,12 @@ class MainWindow(QWidget):
                 self.format_btn_group.addButton(self.mp3_radio_btn)
                 self.format_btn_group.addButton(self.mp4_radio_btn)
                 self.mp4_radio_btn.setChecked(True)
-                download_btn = QPushButton("Download")
-                download_btn.clicked.connect(self.download_playlist)
+                self.download_btn = QPushButton("Download")
+                self.download_btn.clicked.connect(self.download_playlist)
 
                 self.format_btn_layout.addWidget(self.mp4_radio_btn)
                 self.format_btn_layout.addWidget(self.mp3_radio_btn)
-                self.format_btn_layout.addWidget(download_btn)
+                self.format_btn_layout.addWidget(self.download_btn)
 
                 self.main_layout.addLayout(self.format_btn_layout)
 
@@ -153,8 +152,8 @@ class MainWindow(QWidget):
                 self.format_btn_group.addButton(self.mp3_radio_btn)
                 self.format_btn_group.addButton(self.mp4_radio_btn)
                 self.mp4_radio_btn.setChecked(True)
-                download_btn = QPushButton("Download")
-                download_btn.clicked.connect(self.download_vid)
+                self.download_btn = QPushButton("Download")
+                self.download_btn.clicked.connect(self.download_vid)
                 self.mp3_radio_btn.toggled.connect(self.on_format_changed)
                 self.mp4_radio_btn.toggled.connect(self.on_format_changed)
 
@@ -169,7 +168,7 @@ class MainWindow(QWidget):
                 video_item_layout.addWidget(vid_thumbnail)
                 video_item_layout.addLayout(self.video_description_layout)
                 video_item_layout.addLayout(self.format_btn_layout)
-                video_item_layout.addWidget(download_btn)
+                video_item_layout.addWidget(self.download_btn)
 
                 self.video_box_layout.addLayout(video_item_layout)
             except (InvalidURLError, DownloadFailedError, NoStreamsError, MetadataError, FileOperationError) as e:
@@ -182,6 +181,12 @@ class MainWindow(QWidget):
             self.video_box_layout.addWidget(error_label)
 
     def download_playlist(self):
+        self.downloading_box = QVBoxLayout()
+        download_text = QLabel("Downloading Complete")
+        download_text.setAlignment(Qt.AlignCenter)
+        self.downloading_box.addWidget(download_text)
+        self.main_layout.addLayout(self.downloading_box)
+        QApplication.processEvents()
         if self.mp4_radio_btn.isChecked():
             try:
                 self.downloader.video_download()
@@ -198,8 +203,15 @@ class MainWindow(QWidget):
                 error_label = QLabel(f"Download failed: {str(e)}\nTry again later")
                 error_label.setAlignment(Qt.AlignCenter)
                 self.video_box_layout.addWidget(error_label)
+        QTimer.singleShot(3000, self.remove_downloading_box)
 
     def download_vid(self):
+        self.downloading_box = QVBoxLayout()
+        download_text = QLabel("Downloading Complete")
+        download_text.setAlignment(Qt.AlignCenter)
+        self.downloading_box.addWidget(download_text)
+        self.main_layout.addLayout(self.downloading_box)
+        QApplication.processEvents()
         if self.mp4_radio_btn.isChecked():
             try:
                 self.downloader.single_video_download(self.resolution_combo_box.currentText())
@@ -217,7 +229,15 @@ class MainWindow(QWidget):
                 error_label.setAlignment(Qt.AlignCenter)
                 self.video_box_layout.addWidget(error_label)
 
+        QTimer.singleShot(3000, self.remove_downloading_box)
 
+    def remove_downloading_box(self):
+        if self.downloading_box:
+            while self.downloading_box.count():
+                item = self.downloading_box.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+            self.main_layout.removeItem(self.downloading_box)
     def on_format_changed(self):
         if self.mp3_radio_btn.isChecked():
             try:
