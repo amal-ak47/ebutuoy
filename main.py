@@ -130,7 +130,7 @@ class MainWindow(QWidget):
     def initUI(self):
         self.setWindowTitle("Ebutouy")
         self.setWindowIcon(QIcon('logo.png'))
-        self.setFixedSize(600, 600)
+        self.setFixedSize(600, 700)
         self.center()
 
     # Layouts
@@ -393,7 +393,7 @@ class MainWindow(QWidget):
             border-radius: 15px;
             padding: 20px;
         """)
-        self.video_box_layout.addWidget(self.popup_label)
+        self.main_layout.addWidget(self.popup_label)
         QTimer.singleShot(3000, self.remove_popup)
 
 # For removing the confirmation after 3 seconds

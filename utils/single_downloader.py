@@ -29,6 +29,14 @@ class SingleDownloader:
 
         self._initialize_youtube()
 
+    # get ffmpeg path
+    def get_ffmpeg_path(self):
+        if getattr(sys, 'frozen', False):
+            ffmpeg_path = os.path.join(sys._MEIPASS, 'ffmpeg', 'ffmpeg')
+        else:
+            ffmpeg_path = 'ffmpeg'
+        return ffmpeg_path
+
     # Initialize YouTube object
     def _initialize_youtube(self) -> None:
         if not self.link:
@@ -120,7 +128,7 @@ class SingleDownloader:
                     mp3_path: str = m4a_path.replace(".m4a", ".mp3")
                     urllib.request.urlretrieve(self.thumbnail, thumb_path)
                     command: list = [
-                        "ffmpeg",
+                        self.get_ffmpeg_path(),
                         "-y",
                         "-i", m4a_path,
                         "-i", thumb_path,
@@ -168,7 +176,7 @@ class SingleDownloader:
                     temp_output: str = f"{self.path}/.temp_video.mp4"
                     urllib.request.urlretrieve(self.thumbnail, thumb_path)
                     command: list = [
-                        "ffmpeg",
+                        self.get_ffmpeg_path(),
                         "-y",
                         "-i", mp4_path,
                         "-i", thumb_path,
