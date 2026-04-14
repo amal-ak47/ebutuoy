@@ -29,33 +29,21 @@ class PlaylistDownloader():
 
     def video_download(self):
         try:
-            for video in self.playlist.videos:
-                ys = video.streams.get_highest_resolution(progressive=True)
-                ys.download(output_path=self.path)
+            for link in self.playlist.video_urls:
+                downloader = SingleDownloader(link)
+                downloader.single_video_download()
+                downloader.video_meta()
         except Exception as e:
-            raise FileOperationError(f"Video download failed: {str(e)}")
+            raise MetadataError(f"Failed: {str(e)}")
 
     def audio_download(self):
         try:
-            for audio in self.playlist.videos:
-                ys = audio.streams.get_audio_only()
-                ys.download(output_path=self.path)
-        except Exception as e:
-            raise FileOperationError(f"Audio download failed: {str(e)}")
-
-    def change_audio_meta(self):
-        try:
             for link in self.playlist.video_urls:
-                SingleDownloader(link, self.path).audio_meta()
+                downloader = SingleDownloader(link)
+                downloader.single_audio_download()
+                downloader.audio_meta()
         except Exception as e:
-            raise MetadataError(f"Failed to change audio metadata: {str(e)}")
-
-    def change_video_meta(self):
-        try:
-            for link in self.playlist.video_urls:
-                SingleDownloader(link, self.path).video_meta()
-        except Exception as e:
-            raise MetadataError(f"Failed to change video metadata: {str(e)}")
+            raise MetadataError(f"Failed: {str(e)}")
 
 def main():
     try:

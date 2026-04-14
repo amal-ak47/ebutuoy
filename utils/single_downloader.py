@@ -50,11 +50,15 @@ class SingleDownloader:
             raise InvalidURLError(f"Failed to load video: {str(e)}")
 
     # video downloading using desired resolution as mp4 format
-    def single_video_download(self, resolution: str) -> bool:
+    def single_video_download(self, resolution: str = None) -> bool:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
-            stream: pytubefix.Stream = self.yt.streams.filter(progressive=True, res=resolution, file_extension='mp4').first()
+            if resolution is None:
+                stream: pytubefix.Stream = self.yt.streams.get_highest_resolution(progressive=True)
+            else:
+                stream: pytubefix.Stream = self.yt.streams.filter(progressive=True, res=resolution, file_extension='mp4').first()
+
             if not stream:
                 raise NoStreamsError(f"No stream available for {resolution}")
             stream.download(output_path=self.path)
@@ -87,13 +91,15 @@ class SingleDownloader:
             return None
 
     # audio downloading using desired abr
-    def single_audio_download(self, bitrate: str) -> bool:
+    def single_audio_download(self, bitrate: str = None) -> bool:
+        stream: Optional[pytubefix.Stream] = None
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
-        if not bitrate:
-            return False
         try:
-            stream: pytubefix.Stream = self.yt.streams.filter(only_audio=True, abr=bitrate).first()
+            if bitrate is None:
+                stream =  self.yt.streams.filter(only_audio=True).first()
+            else:
+                stream = self.yt.streams.filter(only_audio=True, abr=bitrate).first()
             if not stream:
                 return False
             stream.download(output_path=self.path)

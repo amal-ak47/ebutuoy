@@ -1,9 +1,9 @@
 import sys
 from urllib.request import urlopen
-from PyQt5.QtCore import Qt, QTimer, QRect
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QFont, QIcon
 from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QComboBox, QLineEdit, \
-    QRadioButton, QButtonGroup, QScrollArea, QFrame, QDialog
+    QRadioButton, QButtonGroup, QScrollArea
 from utils.custom_exception import InvalidURLError, DownloadFailedError, MetadataError, NoStreamsError, \
     FileOperationError
 from utils.playlist import PlaylistDownloader
@@ -189,6 +189,11 @@ class MainWindow(QWidget):
                 item.widget().deleteLater()
             elif item.layout():
                 self.clear_layout(item.layout())
+
+        if hasattr(self, 'format_btn_layout'):
+            self.clear_layout(self.format_btn_layout)
+            self.main_layout.removeItem(self.format_btn_layout)
+
         self.url_text = self.url_box.text()
         self.url_box.clear()
 
@@ -340,7 +345,6 @@ class MainWindow(QWidget):
         if self.mp4_radio_btn.isChecked():
             try:
                 self.downloader.video_download()
-                self.downloader.change_video_meta()
                 self.show_popup()
             except (FileOperationError, Exception) as e:
                 error_label = QLabel(f"Download failed: {str(e)}\nTry again later")
@@ -350,7 +354,6 @@ class MainWindow(QWidget):
         elif self.mp3_radio_btn.isChecked():
             try:
                 self.downloader.audio_download()
-                self.downloader.change_audio_meta()
                 self.show_popup()
             except (FileOperationError, Exception) as e:
                 error_label = QLabel(f"Download failed: {str(e)}\nTry again later")
