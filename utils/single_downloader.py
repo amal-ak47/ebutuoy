@@ -32,7 +32,10 @@ class SingleDownloader:
     # get ffmpeg path
     def get_ffmpeg_path(self):
         if getattr(sys, 'frozen', False):
-            ffmpeg_path = os.path.join(sys._MEIPASS, 'ffmpeg', 'ffmpeg')
+            if sys.platform == 'win32':
+                ffmpeg_path = os.path.join(sys._MEIPASS, 'ffmpeg', 'ffmpeg.exe')
+            else:
+                ffmpeg_path = os.path.join(sys._MEIPASS, 'ffmpeg', 'ffmpeg')
         else:
             ffmpeg_path = 'ffmpeg'
         return ffmpeg_path
