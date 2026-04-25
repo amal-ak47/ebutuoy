@@ -115,14 +115,13 @@ class SingleDownloader:
         if not self.yt:
             raise InvalidURLError("YouTube object not initialized")
         try:
-            safe_title: str = unidecode(self.yt.title)
-            safe_title = re.sub(r'[/\\:<>"|?*]', '', safe_title)
+            m4a_files: list = list(Path(self.path).glob("*.m4a"))
 
-            m4a_files: list = list(Path(self.path).glob(f"*{safe_title.split()[:10]}*.m4a"))
             if not m4a_files:
                 raise MetadataError("Audio file not found")
 
-            m4a_path = str(m4a_files[0])
+            m4a_path = str(m4a_files[-1])  # Get the most recently downloaded file
+
             try:
                 MP4(m4a_path)
             except FileNotFoundError:
